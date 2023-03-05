@@ -86,11 +86,34 @@ def load_trajectory(file_top,
     # separate the trajectory, separate to the topology or the subsequence selections
     traj = univ.trajectory[md_start:md_end:md_step]
     
+
     # if there is a non-blank selection, apply the selection text to the universe for 
     # later use. This also affects the trajectory, even though it has been separated earlier
     if selection != "":
         try:
-            univ = univ.select_atoms(selection)
+            # univ = univ.select_atoms(selection)
+            from solvation_analysis.solute import Solute
+            # instantiate Universe
+            # define solute AtomGroup
+            li_atoms = univ.atoms.select_atoms("element Li")
+
+            # define solvent AtomGroups
+            EA = univ.residues[0:235].atoms                    # ethyl acetate
+            FEC = univ.residues[235:600].atoms                 # fluorinated ethylene carbonate
+            PF6 = univ.atoms.select_atoms("byres element P")   # hexafluorophosphate
+
+            # instantiate solution
+            solute = Solute.from_atoms(li_atoms,
+                                {'EA': EA, 'FEC': FEC, 'PF6': PF6},
+                                radii={'PF6': 2.6, 'FEC': 2.7})
+
+            solute.run()
+            solute.speciation.get_shells({'EA': 3, 'FEC': 1, 'PF6': 0})
+            univ = solute.get_shell(solute_index=603, frame=0)
+
+
+
+
         except:
             warnings.warn(f"Unable to apply selection: '{selection}'. Loading entire topology.")
     
@@ -107,8 +130,34 @@ def load_trajectory(file_top,
     
     
     # determin the bonds for the structure
+    # if hasattr(univ, 'bonds') and include_bonds:
+    #     bonds = univ.bonds.indices
+    # else:
+    #     bonds = []
+
+
+
+
     if hasattr(univ, 'bonds') and include_bonds:
-        bonds = univ.bonds.indices
+        # If there is a selection, we need to recalculate the bond indices
+        if selection != "":
+            index_map = { index:i for i, index in enumerate(univ.atoms.indices) }
+
+            new_bonds = []
+            for bond in univ.bonds.indices:
+                try:
+                    new_index = [index_map[y] for y in bond]
+                    new_bonds.append(new_index)
+                except KeyError:
+                    # fragment - one of the atoms in the bonds was 
+                    # deleted by the selection, so we shouldn't 
+                    # pass this as a bond.  
+                    pass
+                
+            bonds = np.array(new_bonds)
+        else:
+            bonds = univ.bonds.indices
+
     else:
         bonds = []
     
