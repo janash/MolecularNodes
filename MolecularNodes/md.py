@@ -75,7 +75,6 @@ def load_trajectory(file_top,
                     solute ="element Li",
                     solvent_list='EA = univ.residues[0:235].atoms,FEC = univ.residues[235:600].atoms,PF6 = univ.atoms.select_atoms("byres element P")',
                     solvent_radii_list ='PF6=2.6,FEC=2.7',
-                    solvent_list_count ='EA=3,FEC=1,PF6=0',
                     solute_index=603, 
                     frame=0,
                     
@@ -98,13 +97,16 @@ def load_trajectory(file_top,
     # later use. This also affects the trajectory, even though it has been separated earlier
     if selection != "":
         try:
+
             univ = univ.select_atoms(selection)
+
+
         except:
             warnings.warn(f"Unable to apply selection: '{selection}'. Loading entire topology.")
 
 
     #solv ana dev
-    if solute != "" and solvent_list !="" and solvent_radii_list!="" and solvent_list_count!="" and solvent_list_count!="":
+    if solute != "":
         try:
             from solvation_analysis.solute import Solute
 
@@ -121,10 +123,7 @@ def load_trajectory(file_top,
                 solv_dict.update(test(i))
 
             solvent_list=solv_dict
-            print(solvent_list)
-            breakpoint()
-
-
+ 
             list_radii = solvent_radii_list.split(",")
             solv_radii_dict={}
             for i in list_radii:
@@ -138,20 +137,12 @@ def load_trajectory(file_top,
                                 solvent_list,
                                 solvent_radii_list)
             
-
-            list_count = solvent_list_count.split(",")
-            solv_count_dict={}
-            for i in list_count:
-                solv_count_dict.update(test(i))
-
-
-            solvent_list_count=solv_count_dict
-            solute_obj.speciation.get_shells(solvent_list_count)
-            shell = solute_obj.get_shell(solute_index=solute_index, frame=frame)
+            solute_obj.run()
+            shell = solute_obj.get_shell(solute_index, frame)
             univ=shell
 
         except:
-            warnings.warn(f"Unable to apply selection: '{selection}'. Loading entire topology.")
+            warnings.warn(f"Unable to apply selection: '{solute}'. Loading entire topology.")
 
 
 

@@ -80,14 +80,6 @@ def register():
         default = 'PF6=2.6,FEC=2.7', 
         subtype = 'NONE'
         )
-    bpy.types.Scene.mol_md_solvent_groups_count = bpy.props.StringProperty(
-        name = 'md_solvent_groups_count', 
-        description = 'Custom selection string when importing MD simulation. See: "https://docs.mdanalysis.org/stable/documentation_pages/selections.html"', 
-        options = {'TEXTEDIT_UPDATE'}, 
-        default = 'EA=3,FEC=1,PF6=0', 
-        subtype = 'NONE'
-        )
-
     bpy.types.Scene.mol_import_md_solute_index = bpy.props.IntProperty(
         name = "mol_import_md_solute_index", 
         description = "Solute Index for importing MD trajectory", 
@@ -256,6 +248,22 @@ def unregister():
     del bpy.types.Scene.mol_import_md_frame_step
     del bpy.types.Scene.mol_import_md_frame_end
     del bpy.types.Scene.mol_import_default_style
+
+
+
+
+
+    del bpy.types.Scene.mol_md_solute
+    del bpy.types.Scene.mol_md_solvent_groups
+    del bpy.types.Scene.mol_md_solvent_groups_radii
+    del bpy.types.Scene.mol_import_md_solute_index
+    del bpy.types.Scene.mol_import_md_frame
+    
+
+
+
+
+
     
     del bpy.types.Scene.trajectory_selection_list
     del bpy.types.Scene.list_index

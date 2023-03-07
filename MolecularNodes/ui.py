@@ -93,7 +93,6 @@ class MOL_OT_Import_Protein_MD(bpy.types.Operator):
         solute=bpy.context.scene.mol_md_solute
         solvent_list=bpy.context.scene.mol_md_solvent_groups
         solvent_radii_list=bpy.context.scene.mol_md_solvent_groups_radii
-        solvent_list_count=bpy.context.scene.mol_md_solvent_groups_count
         solute_index = bpy.context.scene.mol_import_md_solute_index
         frame = bpy.context.scene.mol_import_md_frame
 
@@ -111,7 +110,6 @@ class MOL_OT_Import_Protein_MD(bpy.types.Operator):
             solute = solute,
             solvent_list=solvent_list,
             solvent_radii_list=solvent_radii_list,
-            solvent_list_count=solvent_list_count,
             solute_index=solute_index,
             frame=frame,
         )
@@ -227,11 +225,6 @@ def MOL_PT_panel_md_traj(layout_function, scene):
     col_main.prop(
         bpy.context.scene, 'mol_md_solvent_groups_radii', 
         text = 'Import Solvent Groups Radii', 
-        emboss = True
-    )
-    col_main.prop(
-        bpy.context.scene, 'mol_md_solvent_groups_count', 
-        text = 'Import Solvent Groups Count', 
         emboss = True
     )
     col_main.prop(
