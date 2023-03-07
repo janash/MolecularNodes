@@ -57,6 +57,55 @@ def register():
         default = 'not (name H* or name OW)', 
         subtype = 'NONE'
         )
+    
+    #solv ana add
+    bpy.types.Scene.mol_md_solute = bpy.props.StringProperty(
+        name = 'md_solute', 
+        description = 'Custom selection string when importing MD simulation. See: "https://docs.mdanalysis.org/stable/documentation_pages/selections.html"', 
+        options = {'TEXTEDIT_UPDATE'}, 
+        default = 'element Li', 
+        subtype = 'NONE'
+        )
+    bpy.types.Scene.mol_md_solvent_groups = bpy.props.StringProperty(
+        name = 'md_solvent_groups', 
+        description = 'Custom selection string when importing MD simulation. See: "https://docs.mdanalysis.org/stable/documentation_pages/selections.html"', 
+        options = {'TEXTEDIT_UPDATE'}, 
+        default = 'EA = univ.residues[0:235].atoms,FEC = univ.residues[235:600].atoms,PF6 = univ.atoms.select_atoms("byres element P")', 
+        subtype = 'NONE'
+        )
+    bpy.types.Scene.mol_md_solvent_groups_radii = bpy.props.StringProperty(
+        name = 'md_solvent_groups_radii', 
+        description = 'Custom selection string when importing MD simulation. See: "https://docs.mdanalysis.org/stable/documentation_pages/selections.html"', 
+        options = {'TEXTEDIT_UPDATE'}, 
+        default = 'PF6=2.6,FEC=2.7', 
+        subtype = 'NONE'
+        )
+    bpy.types.Scene.mol_md_solvent_groups_count = bpy.props.StringProperty(
+        name = 'md_solvent_groups_count', 
+        description = 'Custom selection string when importing MD simulation. See: "https://docs.mdanalysis.org/stable/documentation_pages/selections.html"', 
+        options = {'TEXTEDIT_UPDATE'}, 
+        default = 'EA=3,FEC=1,PF6=0', 
+        subtype = 'NONE'
+        )
+
+    bpy.types.Scene.mol_import_md_solute_index = bpy.props.IntProperty(
+        name = "mol_import_md_solute_index", 
+        description = "Solute Index for importing MD trajectory", 
+        subtype = 'NONE',
+        default = 603
+    )
+    bpy.types.Scene.mol_import_md_frame = bpy.props.IntProperty(
+        name = "mol_import_md_frame", 
+        description = "Frame for importing MD trajectory", 
+        subtype = 'NONE',
+        default = 0
+    )
+
+
+
+
+
+
     bpy.types.Scene.mol_import_center = bpy.props.BoolProperty(
         name = "mol_import_centre", 
         description = "Move the imported Molecule on the World Origin",

@@ -71,6 +71,14 @@ def load_trajectory(file_top,
                     include_bonds = False, 
                     del_solvent = False,
                     selection = "not (name H* or name OW)",
+
+                    solute ="element Li",
+                    solvent_list='EA = univ.residues[0:235].atoms,FEC = univ.residues[235:600].atoms,PF6 = univ.atoms.select_atoms("byres element P")',
+                    solvent_radii_list ='PF6=2.6,FEC=2.7',
+                    solvent_list_count ='EA=3,FEC=1,PF6=0',
+                    solute_index=603, 
+                    frame=0,
+                    
                     name = "default"
                     ):
     
@@ -86,36 +94,67 @@ def load_trajectory(file_top,
     # separate the trajectory, separate to the topology or the subsequence selections
     traj = univ.trajectory[md_start:md_end:md_step]
     
-
     # if there is a non-blank selection, apply the selection text to the universe for 
     # later use. This also affects the trajectory, even though it has been separated earlier
     if selection != "":
         try:
-            # univ = univ.select_atoms(selection)
-            from solvation_analysis.solute import Solute
-            # instantiate Universe
-            # define solute AtomGroup
-            li_atoms = univ.atoms.select_atoms("element Li")
+            univ = univ.select_atoms(selection)
+        except:
+            warnings.warn(f"Unable to apply selection: '{selection}'. Loading entire topology.")
 
-            # define solvent AtomGroups
-            EA = univ.residues[0:235].atoms                    # ethyl acetate
-            FEC = univ.residues[235:600].atoms                 # fluorinated ethylene carbonate
-            PF6 = univ.atoms.select_atoms("byres element P")   # hexafluorophosphate
+
+    #solv ana dev
+    if solute != "" and solvent_list !="" and solvent_radii_list!="" and solvent_list_count!="" and solvent_list_count!="":
+        try:
+            from solvation_analysis.solute import Solute
+
+            def test(selection):
+                loc = {}
+                exec(selection, globals(), loc)
+                return loc
+            
+            solute = univ.select_atoms(solute)
+
+            list_solvent = solvent_list.split(",")
+            solv_dict={}
+            for i in list_solvent:
+                solv_dict.update(test(i))
+
+            solvent_list=solv_dict
+            print(solvent_list)
+            breakpoint()
+
+
+            list_radii = solvent_radii_list.split(",")
+            solv_radii_dict={}
+            for i in list_radii:
+                solv_radii_dict.update(test(i))
+
+            solvent_radii_list=solv_radii_dict
+
 
             # instantiate solution
-            solute = Solute.from_atoms(li_atoms,
-                                {'EA': EA, 'FEC': FEC, 'PF6': PF6},
-                                radii={'PF6': 2.6, 'FEC': 2.7})
+            solute_obj= Solute.from_atoms(solute,
+                                solvent_list,
+                                solvent_radii_list)
+            
 
-            solute.run()
-            solute.speciation.get_shells({'EA': 3, 'FEC': 1, 'PF6': 0})
-            univ = solute.get_shell(solute_index=603, frame=0)
+            list_count = solvent_list_count.split(",")
+            solv_count_dict={}
+            for i in list_count:
+                solv_count_dict.update(test(i))
 
 
-
+            solvent_list_count=solv_count_dict
+            solute_obj.speciation.get_shells(solvent_list_count)
+            shell = solute_obj.get_shell(solute_index=solute_index, frame=frame)
+            univ=shell
 
         except:
             warnings.warn(f"Unable to apply selection: '{selection}'. Loading entire topology.")
+
+
+
     
     # Try and extract the elements from the topology. If the universe doesn't contain
     # the element information, then guess based on the atom names in the toplogy
@@ -137,9 +176,8 @@ def load_trajectory(file_top,
 
 
 
-
     if hasattr(univ, 'bonds') and include_bonds:
-        # If there is a selection, we need to recalculate the bond indices
+    # If there is a selection, we need to recalculate the bond indices
         if selection != "":
             index_map = { index:i for i, index in enumerate(univ.atoms.indices) }
 
@@ -160,6 +198,8 @@ def load_trajectory(file_top,
 
     else:
         bonds = []
+
+    
     
     # create the initial model
     mol_object = create_object(

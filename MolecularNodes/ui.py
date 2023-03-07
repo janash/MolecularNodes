@@ -90,7 +90,14 @@ class MOL_OT_Import_Protein_MD(bpy.types.Operator):
         md_end =   bpy.context.scene.mol_import_md_frame_end
         del_solvent = bpy.context.scene.mol_import_del_solvent
         include_bonds = bpy.context.scene.mol_import_include_bonds
-        
+        solute=bpy.context.scene.mol_md_solute
+        solvent_list=bpy.context.scene.mol_md_solvent_groups
+        solvent_radii_list=bpy.context.scene.mol_md_solvent_groups_radii
+        solvent_list_count=bpy.context.scene.mol_md_solvent_groups_count
+        solute_index = bpy.context.scene.mol_import_md_solute_index
+        frame = bpy.context.scene.mol_import_md_frame
+
+
         mol_object, coll_frames = md.load_trajectory(
             file_top    = file_top, 
             file_traj   = file_traj, 
@@ -100,7 +107,13 @@ class MOL_OT_Import_Protein_MD(bpy.types.Operator):
             name        = name, 
             del_solvent = del_solvent, 
             selection   = selection,
-            include_bonds=include_bonds
+            include_bonds=include_bonds,
+            solute = solute,
+            solvent_list=solvent_list,
+            solvent_radii_list=solvent_radii_list,
+            solvent_list_count=solvent_list_count,
+            solute_index=solute_index,
+            frame=frame,
         )
         n_frames = len(coll_frames.objects)
         
@@ -200,6 +213,41 @@ def MOL_PT_panel_md_traj(layout_function, scene):
         text = 'Import Filter', 
         emboss = True
     )
+    #new
+    col_main.prop(
+        bpy.context.scene, 'mol_md_solute', 
+        text = 'Import Solute', 
+        emboss = True
+    )
+    col_main.prop(
+        bpy.context.scene, 'mol_md_solvent_groups', 
+        text = 'Import Solvent Groups', 
+        emboss = True
+    )
+    col_main.prop(
+        bpy.context.scene, 'mol_md_solvent_groups_radii', 
+        text = 'Import Solvent Groups Radii', 
+        emboss = True
+    )
+    col_main.prop(
+        bpy.context.scene, 'mol_md_solvent_groups_count', 
+        text = 'Import Solvent Groups Count', 
+        emboss = True
+    )
+    col_main.prop(
+        bpy.context.scene, 'mol_import_md_solute_index', 
+        text = 'Import Solute Index', 
+        emboss = True
+    )
+    col_main.prop(
+        bpy.context.scene, 'mol_import_md_frame', 
+        text = 'Import Frame', 
+        emboss = True
+    )
+
+
+
+
     col_main.separator()
     col_main.label(text="Custom Selections")
     row = col_main.row(align=True)
