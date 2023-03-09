@@ -58,7 +58,7 @@ def register():
         subtype = 'NONE'
         )
     
-    #solv ana add
+    # solv ana add
     bpy.types.Scene.mol_md_solute = bpy.props.StringProperty(
         name = 'md_solute', 
         description = 'Custom selection string when importing MD simulation. See: "https://docs.mdanalysis.org/stable/documentation_pages/selections.html"', 
@@ -73,13 +73,6 @@ def register():
         default = 'EA = univ.residues[0:235].atoms,FEC = univ.residues[235:600].atoms,PF6 = univ.atoms.select_atoms("byres element P")', 
         subtype = 'NONE'
         )
-    bpy.types.Scene.mol_md_solvent_groups_radii = bpy.props.StringProperty(
-        name = 'md_solvent_groups_radii', 
-        description = 'Custom selection string when importing MD simulation. See: "https://docs.mdanalysis.org/stable/documentation_pages/selections.html"', 
-        options = {'TEXTEDIT_UPDATE'}, 
-        default = 'PF6=2.6,FEC=2.7', 
-        subtype = 'NONE'
-        )
     bpy.types.Scene.mol_import_md_solute_index = bpy.props.IntProperty(
         name = "mol_import_md_solute_index", 
         description = "Solute Index for importing MD trajectory", 
@@ -92,12 +85,6 @@ def register():
         subtype = 'NONE',
         default = 0
     )
-
-
-
-
-
-
     bpy.types.Scene.mol_import_center = bpy.props.BoolProperty(
         name = "mol_import_centre", 
         description = "Move the imported Molecule on the World Origin",
@@ -255,7 +242,6 @@ def unregister():
 
     del bpy.types.Scene.mol_md_solute
     del bpy.types.Scene.mol_md_solvent_groups
-    del bpy.types.Scene.mol_md_solvent_groups_radii
     del bpy.types.Scene.mol_import_md_solute_index
     del bpy.types.Scene.mol_import_md_frame
     

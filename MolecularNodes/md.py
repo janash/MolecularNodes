@@ -71,18 +71,14 @@ def load_trajectory(file_top,
                     include_bonds = False, 
                     del_solvent = False,
                     selection = "not (name H* or name OW)",
-
-                    solute ="element Li",
-                    solvent_list='EA = univ.residues[0:235].atoms,FEC = univ.residues[235:600].atoms,PF6 = univ.atoms.select_atoms("byres element P")',
-                    solvent_radii_list ='PF6=2.6,FEC=2.7',
-                    solute_index=603, 
-                    frame=0,
-                    
+                    solute = 'element Li',
+                    solvent_list = 'EA = univ.residues[0:235].atoms,FEC = univ.residues[235:600].atoms,PF6 = univ.atoms.select_atoms("byres element P")',
                     name = "default"
                     ):
     
     import MDAnalysis as mda
     import MDAnalysis.transformations as trans
+
     
     # initially load in the trajectory
     if file_traj == "":
@@ -97,53 +93,45 @@ def load_trajectory(file_top,
     # later use. This also affects the trajectory, even though it has been separated earlier
     if selection != "":
         try:
-
             univ = univ.select_atoms(selection)
-
 
         except:
             warnings.warn(f"Unable to apply selection: '{selection}'. Loading entire topology.")
 
 
-    #solv ana dev
+
+    def test(selection):
+        loc = {}
+        exec(selection, globals(), loc)
+        return loc
+            
+    
     if solute != "":
         try:
             from solvation_analysis.solute import Solute
 
-            def test(selection):
-                loc = {}
-                exec(selection, globals(), loc)
-                return loc
+            solute_real = univ.select_atoms(solute)
+            univ=solute_real
+
+            print(type(solute))
+            print(type(solvent_list))
+            # list_solvent = solvent_list.str(",")
+            # solv_dict={}
+            # for i in list_solvent:
+            #     solv_dict.update(test(i))
+            # solvent_list_real=solv_dict
+
+
+            # # instantiate solution
+            # solute_obj= Solute.from_atoms(solute_real,
+            #                     solvent_list_real)
             
-            solute = univ.select_atoms(solute)
-
-            list_solvent = solvent_list.split(",")
-            solv_dict={}
-            for i in list_solvent:
-                solv_dict.update(test(i))
-
-            solvent_list=solv_dict
- 
-            list_radii = solvent_radii_list.split(",")
-            solv_radii_dict={}
-            for i in list_radii:
-                solv_radii_dict.update(test(i))
-
-            solvent_radii_list=solv_radii_dict
-
-
-            # instantiate solution
-            solute_obj= Solute.from_atoms(solute,
-                                solvent_list,
-                                solvent_radii_list)
-            
-            solute_obj.run()
-            shell = solute_obj.get_shell(solute_index, frame)
-            univ=shell
+            # solute_obj.run()
+            # shell = solute_obj.get_shell(solute_index, frame)
+            # univ=shell
 
         except:
             warnings.warn(f"Unable to apply selection: '{solute}'. Loading entire topology.")
-
 
 
     
@@ -166,12 +154,10 @@ def load_trajectory(file_top,
     #     bonds = []
 
 
-
     if hasattr(univ, 'bonds') and include_bonds:
     # If there is a selection, we need to recalculate the bond indices
-        if selection != "":
+        if selection !="":
             index_map = { index:i for i, index in enumerate(univ.atoms.indices) }
-
             new_bonds = []
             for bond in univ.bonds.indices:
                 try:
@@ -190,8 +176,31 @@ def load_trajectory(file_top,
     else:
         bonds = []
 
-    
-    
+
+    if hasattr(univ, 'bonds') and include_bonds:
+    # If there is a selection, we need to recalculate the bond indices
+        if solute !="":
+            index_map = { index:i for i, index in enumerate(univ.atoms.indices) }
+            new_bonds = []
+            for bond in univ.bonds.indices:
+                try:
+                    new_index = [index_map[y] for y in bond]
+                    new_bonds.append(new_index)
+                except KeyError:
+                    # fragment - one of the atoms in the bonds was 
+                    # deleted by the selection, so we shouldn't 
+                    # pass this as a bond.  
+                    pass
+                
+            bonds = np.array(new_bonds)
+        else:
+            bonds = univ.bonds.indices
+
+    else:
+        bonds = []
+
+
+
     # create the initial model
     mol_object = create_object(
         name = name,
@@ -336,3 +345,63 @@ def load_trajectory(file_top,
     
     return mol_object, coll_frames
     
+
+
+
+
+"""
+
+    
+    import MDAnalysis as mda
+    import MDAnalysis.transformations as trans
+    
+    # initially load in the trajectory
+    if file_traj == "":
+        univ = mda.Universe(file_top)
+    else:
+        univ = mda.Universe(file_top, file_traj)
+        
+    # separate the trajectory, separate to the topology or the subsequence selections
+    traj = univ.trajectory[md_start:md_end:md_step]
+    
+
+    #solv ana dev
+    if solute != "":
+        try:
+            from solvation_analysis.solute import Solute
+            def test(selection):
+                loc = {}
+                exec(selection, globals(), loc)
+                return loc
+            
+            solute_real = univ.select_atoms(solute)
+            list_solvent = solvent_list.split(",")
+            solv_dict={}
+            for i in list_solvent:
+                solv_dict.update(test(i))
+            
+            solvent_list_real=solv_dict
+
+            # instantiate solution
+            solute_obj= Solute.from_atoms(solute_real,
+                                solvent_list_real)
+            
+            solute_obj.run()
+            shell = solute_obj.get_shell(solute_index, frame)
+            univ=shell
+
+        except:
+            warnings.warn(f"Unable to apply selection: '{solute}'. Loading entire topology.")
+
+
+
+    
+    # determin the bonds for the structure
+    # if hasattr(univ, 'bonds') and include_bonds:
+    #     bonds = univ.bonds.indices
+    # else:
+    #     bonds = []
+
+
+
+"""

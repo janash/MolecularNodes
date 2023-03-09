@@ -90,9 +90,9 @@ class MOL_OT_Import_Protein_MD(bpy.types.Operator):
         md_end =   bpy.context.scene.mol_import_md_frame_end
         del_solvent = bpy.context.scene.mol_import_del_solvent
         include_bonds = bpy.context.scene.mol_import_include_bonds
+
         solute=bpy.context.scene.mol_md_solute
         solvent_list=bpy.context.scene.mol_md_solvent_groups
-        solvent_radii_list=bpy.context.scene.mol_md_solvent_groups_radii
         solute_index = bpy.context.scene.mol_import_md_solute_index
         frame = bpy.context.scene.mol_import_md_frame
 
@@ -106,12 +106,12 @@ class MOL_OT_Import_Protein_MD(bpy.types.Operator):
             name        = name, 
             del_solvent = del_solvent, 
             selection   = selection,
-            include_bonds=include_bonds,
-            solute = solute,
+
             solvent_list=solvent_list,
-            solvent_radii_list=solvent_radii_list,
-            solute_index=solute_index,
-            frame=frame,
+            include_bonds=include_bonds,
+            solute = solute
+            
+
         )
         n_frames = len(coll_frames.objects)
         
@@ -223,11 +223,6 @@ def MOL_PT_panel_md_traj(layout_function, scene):
         emboss = True
     )
     col_main.prop(
-        bpy.context.scene, 'mol_md_solvent_groups_radii', 
-        text = 'Import Solvent Groups Radii', 
-        emboss = True
-    )
-    col_main.prop(
         bpy.context.scene, 'mol_import_md_solute_index', 
         text = 'Import Solute Index', 
         emboss = True
@@ -259,7 +254,10 @@ def MOL_PT_panel_md_traj(layout_function, scene):
         
         col.prop(item, "name")
         col.prop(item, "selection")
-    
+
+
+
+
 
 class MOL_OT_Import_Method_Selection(bpy.types.Operator):
     bl_idname = "mol.import_method_selection"
