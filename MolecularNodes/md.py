@@ -113,12 +113,13 @@ def load_trajectory(file_top,
             solute_real = univ.select_atoms(solute)
             univ=solute_real
 
-            print(type(solute))
-            print(type(solvent_list))
-            # list_solvent = solvent_list.str(",")
-            # solv_dict={}
-            # for i in list_solvent:
-            #     solv_dict.update(test(i))
+
+            list_solvent = solvent_list.split(",")
+            print(list_solvent)
+            solv_dict = {}
+            for i in list_solvent:
+                print(i)
+                solv_dict.update(test(i))
             # solvent_list_real=solv_dict
 
 
@@ -344,6 +345,10 @@ def load_trajectory(file_top,
     bpy.context.view_layer.layer_collection.children[coll.mn().name].children[coll_frames.name].exclude = True
     
     return mol_object, coll_frames
+
+def new_func():
+    solv_dict={}
+    return solv_dict
     
 
 
