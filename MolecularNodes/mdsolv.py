@@ -5,7 +5,10 @@ from . import coll
 from .load import create_object, add_attribute
 import warnings
 
-class TrajectorySelectionList(bpy.types.PropertyGroup):
+
+
+
+class TrajectorySelectionList_MDSOLV(bpy.types.PropertyGroup):
     """Group of properties for custom selections for MDAnalysis import."""
     
     name: bpy.props.StringProperty(
@@ -20,7 +23,7 @@ class TrajectorySelectionList(bpy.types.PropertyGroup):
         default = "name CA"
     )
 
-class MOL_UL_TrajectorySelectionListUI(bpy.types.UIList):
+class MOL_UL_TrajectorySelectionListUI_MDSOLV(bpy.types.UIList):
     """UI List"""
     
     def draw_item(self, context, layout, data, item, 
@@ -35,32 +38,33 @@ class MOL_UL_TrajectorySelectionListUI(bpy.types.UIList):
             layout.label(text = "", icon = custom_icon)
             
 
-class TrajectorySelection_OT_NewItem(bpy.types.Operator):
+class TrajectorySelection_OT_NewItem_MDSOLV(bpy.types.Operator):
     """Add a new custom selection to the list."""
     
     bl_idname = "trajectory_selection_list.new_item"
     bl_label = "+"
     
     def execute(self, context):
-        context.scene.trajectory_selection_list.add()
+        context.scene.trajectory_selection_list_MDSOLV.add()
         return {'FINISHED'}
 
-class TrajectorySelection_OT_DeleteIem(bpy.types.Operator):
+class TrajectorySelection_OT_DeleteIem_MDSOLV(bpy.types.Operator):
     
     bl_idname = "trajectory_selection_list.delete_item"
     bl_label = "-"
     
     @classmethod
     def poll(cls, context):
-        return context.scene.trajectory_selection_list
+        return context.scene.trajectory_selection_list_MDSOLV
     def execute(self, context):
-        my_list = context.scene.trajectory_selection_list
-        index = context.scene.list_index
+        my_list = context.scene.trajectory_selection_list_MDSOLV
+        index = context.scene.list_index_MDSOLV
         
         my_list.remove(index)
-        context.scene.list_index = min(max(0, index - 1), len(my_list) - 1)
+        context.scene.list_index_MDSOLV = min(max(0, index - 1), len(my_list) - 1)
         
         return {'FINISHED'}
+
 
 def load_trajectory(file_top, 
                     file_traj,
@@ -70,30 +74,60 @@ def load_trajectory(file_top,
                     world_scale = 0.01, 
                     include_bonds = False, 
                     del_solvent = False,
-                    selection = "not (name H* or name OW)",
+
+                    solute ='element Li',
+                    solvent_names ='EA,FEC,PF6',
+                    solvent_groups ='resid 1-235,resid 235-600,byres element P',
+                    solute_index=603,
+                    frame_index=0,
                     name = "default"
                     ):
-    
+
     import MDAnalysis as mda
     import MDAnalysis.transformations as trans
-    
+
+
+
     # initially load in the trajectory
     if file_traj == "":
         univ = mda.Universe(file_top)
     else:
         univ = mda.Universe(file_top, file_traj)
-        
+
     # separate the trajectory, separate to the topology or the subsequence selections
     traj = univ.trajectory[md_start:md_end:md_step]
-    
-    # if there is a non-blank selection, apply the selection text to the universe for 
-    # later use. This also affects the trajectory, even though it has been separated earlier
-    if selection != "":
+
+
+
+    if solute != "":
         try:
-            univ = univ.select_atoms(selection)
+            from solvation_analysis.solute import Solute
+
+            solute_real = univ.select_atoms(solute)
+
+            list_solv_groups = solvent_groups.split(",")
+            list_solv_name= solvent_names.split(",")
+
+            solv_resid=[]
+            for i in list_solv_groups:
+                solv_resid.append(univ.select_atoms(i))
+
+            solv_dict=dict(zip(list_solv_name,solv_resid))
+
+            # instantiate solution
+            solute_obj= Solute.from_atoms(solute_real,
+                                solv_dict)
+
+            solute_obj.run()
+            shell = solute_obj.get_shell(solute_index, frame_index)
+            univ=shell
+            print(univ)
+
         except:
-            warnings.warn(f"Unable to apply selection: '{selection}'. Loading entire topology.")
-    
+            warnings.warn(f"Unable to apply selection: '{solute}'. Loading entire topology.")
+
+
+
     # Try and extract the elements from the topology. If the universe doesn't contain
     # the element information, then guess based on the atom names in the toplogy
     try:
@@ -103,19 +137,33 @@ def load_trajectory(file_top,
             elements = [mda.topology.guessers.guess_atom_element(x) for x in univ.atoms.names]
         except:
             pass
-        
-    
-    
-    # determin the bonds for the structure
+
+
+
     if hasattr(univ, 'bonds') and include_bonds:
-        bonds = univ.bonds.indices
+    # If there is a selection, we need to recalculate the bond indices
+        if solute !="":
+            index_map = { index:i for i, index in enumerate(univ.atoms.indices) }
+            new_bonds = []
+            for bond in univ.bonds.indices:
+                try:
+                    new_index = [index_map[y] for y in bond]
+                    new_bonds.append(new_index)
+                except KeyError:
+                    # fragment - one of the atoms in the bonds was 
+                    # deleted by the selection, so we shouldn't 
+                    # pass this as a bond.  
+                    pass
+
+            bonds = np.array(new_bonds)
+        else:
+            bonds = univ.bonds.indices
+
     else:
         bonds = []
 
 
-    
-    
-    
+
     # create the initial model
     mol_object = create_object(
         name = name,
@@ -123,15 +171,15 @@ def load_trajectory(file_top,
         locations = univ.atoms.positions * world_scale, 
         bonds = bonds
     )
-    
+
     ## add the attributes for the model
-    
+
     # The attributes for the model are initially defined as single-use functions. This allows
     # for a loop that attempts to add each attibute by calling the function. Only during this
     # loop will the call fail if the attribute isn't accessible, and the warning is reported
     # there rather than setting up a try: except: for each individual attribute which makes
     # some really messy code.
-    
+
     def att_atomic_number():
         atomic_number = np.array(list(map(
             # if getting the element fails for some reason, return an atomic number of -1
@@ -150,12 +198,12 @@ def load_trajectory(file_top,
             # if fail to get radii, just return radii of 1 for everything as a backup
             vdw_radii = np.ones(len(univ.atoms.names))
             warnings.warn("Unable to extract VDW Radii. Defaulting to 1 for all points.")
-        
+
         return vdw_radii * world_scale
-    
+
     def att_res_id():
         return univ.atoms.resnums
-    
+
     def att_res_name():
         res_names =  np.array(list(map(lambda x: x[0: 3], univ.atoms.resnames)))
         res_numbers = np.array(list(map(
@@ -163,36 +211,36 @@ def load_trajectory(file_top,
             res_names
             )))
         return res_numbers
-    
+
     def att_b_factor():
         return univ.atoms.tempfactors
-    
+
     def att_chain_id():
         chain_id = univ.atoms.chainIDs
         chain_id_unique = np.unique(chain_id)
         chain_id_num = np.array(list(map(lambda x: np.where(x == chain_id_unique)[0][0], chain_id)))
         mol_object['chain_id_unique'] = chain_id_unique
         return chain_id_num
-    
+
     # returns a numpy array of booleans for each atom, whether or not they are in that selection
     def bool_selection(selection):
         return np.isin(univ.atoms.ix, univ.select_atoms(selection).ix).astype(bool)
-    
+
     def att_is_backbone():
         return bool_selection("backbone or nucleicbackbone")
-    
+
     def att_is_alpha_carbon():
         return bool_selection('name CA')
-    
+
     def att_is_solvent():
         return bool_selection('name OW or name HW1 or name HW2')
-    
+
     def att_atom_type():
         return np.array(univ.atoms.types, dtype = int)
-    
+
     def att_is_nucleic():
         return bool_selection('nucleic')
-    
+
     def att_is_peptide():
         return bool_selection('protein')
 
@@ -210,7 +258,7 @@ def load_trajectory(file_top,
         {'name': 'is_nucleic',      'value': att_is_nucleic,      'type': 'BOOLEAN', 'domain': 'POINT'}, 
         {'name': 'is_peptide',      'value': att_is_peptide,      'type': 'BOOLEAN', 'domain': 'POINT'}, 
     )
-    
+
     for att in attributes:
         # tries to add the attribute to the mesh by calling the 'value' function which returns
         # the required values do be added to the domain.
@@ -220,7 +268,7 @@ def load_trajectory(file_top,
             warnings.warn(f"Unable to add attribute: {att['name']}.")
 
     # add the custom selections if they exist
-    custom_selections = bpy.context.scene.trajectory_selection_list
+    custom_selections = bpy.context.scene.trajectory_selection_list_MDSOLV
     if custom_selections:
         for sel in custom_selections:
             try:
@@ -235,7 +283,7 @@ def load_trajectory(file_top,
                 warnings.warn("Unable to add custom selection: {}".format(sel.name))
 
     coll_frames = coll.frames(name)
-    
+
     add_occupancy = True
     for ts in traj:
         frame = create_object(
@@ -254,9 +302,8 @@ def load_trajectory(file_top,
                 add_attribute(frame, 'occupancy', ts.data['occupancy'])
             except:
                 add_occupancy = False
-    
+
     # disable the frames collection from the viewer
     bpy.context.view_layer.layer_collection.children[coll.mn().name].children[coll_frames.name].exclude = True
-    
+
     return mol_object, coll_frames
-    

@@ -5,7 +5,7 @@ from . import load
 from . import md
 from . import assembly
 
-
+from . import mdsolv
 
 # operator that calls the function to import the structure from the PDB
 class MOL_OT_Import_Protein_RCSB(bpy.types.Operator):
@@ -119,6 +119,67 @@ class MOL_OT_Import_Protein_MD(bpy.types.Operator):
         return {"FINISHED"}
 
 
+#new tab solv shell
+class MOL_OT_Import_Solv_Shell_MD(bpy.types.Operator):
+    bl_idname = "mol.import_solv_shell_md"
+    bl_label = "Import Solvation Shell MD"
+    bl_description = "Load molecular dynamics trajectory (solv shell)"
+    bl_options = {"REGISTER", "UNDO"}
+
+    @classmethod
+    def poll(cls, context):
+        return True
+
+    def execute(self, context):
+        file_top = bpy.context.scene.mol_import_mdsolv_topology
+        file_traj = bpy.context.scene.mol_import_mdsolv_trajectory
+        name = bpy.context.scene.mol_import_mdsolv_name
+        md_start = bpy.context.scene.mol_import_mdsolv_frame_start
+        md_step =  bpy.context.scene.mol_import_mdsolv_frame_step
+        md_end =   bpy.context.scene.mol_import_mdsolv_frame_end
+        del_solvent = bpy.context.scene.mol_mdsolv_import_del_solvent
+        include_bonds = bpy.context.scene.mol_mdsolv_import_include_bonds
+
+        solute= bpy.context.scene.mol_mdsolv_solute
+        solvent_names = bpy.context.scene.mol_mdsolv_solvent_groups_name
+        solvent_groups = bpy.context.scene.mol_mdsolv_solvent_groups
+        solute_index = bpy.context.scene.mol_mdsolv_solute_index
+        frame_index = bpy.context.scene.mol_mdsolv_frame_index
+
+        mol_object, coll_frames = mdsolv.load_trajectory(
+            file_top    = file_top, 
+            file_traj   = file_traj, 
+            md_start    = md_start,
+            md_end      = md_end,
+            md_step     = md_step,
+            name        = name, 
+            del_solvent = del_solvent, 
+            include_bonds=include_bonds,
+
+            solute=solute,
+            solvent_names=solvent_names,
+            solvent_groups=solvent_groups,
+            solute_index=solute_index,
+            frame_index=frame_index
+        )
+        n_frames = len(coll_frames.objects)
+        
+        nodes.create_starting_node_tree(
+            obj = mol_object, 
+            coll_frames = coll_frames, 
+            starting_style = bpy.context.scene.mol_import_mdsolv_default_style
+            )
+        bpy.context.view_layer.objects.active = mol_object
+        self.report(
+            {'INFO'}, 
+            message=f"Imported '{file_top}' as {mol_object.name} with {str(n_frames)} \
+                frames from '{file_traj}'."
+                )
+        
+        return {"FINISHED"}
+
+
+
 def MOL_PT_panel_rcsb(layout_function, ):
     col_main = layout_function.column(heading = '', align = False)
     col_main.alert = False
@@ -210,6 +271,99 @@ def MOL_PT_panel_md_traj(layout_function, scene):
     col = row.column()
     col.operator('trajectory_selection_list.new_item', icon="ADD", text="")
     col.operator('trajectory_selection_list.delete_item', icon="REMOVE", text="")
+    if scene.list_index >= 0 and scene.trajectory_selection_list:
+        item = scene.trajectory_selection_list[scene.list_index]
+        
+        col = col_main.column(align=False)
+        col.separator()
+        
+        col.prop(item, "name")
+        col.prop(item, "selection")
+    
+
+#new tab solv shell fn
+def MOL_PT_panel_md_traj_solv_shell(layout_function, scene):
+    col_main = layout_function.column(heading = '', align = False)
+    col_main.alert = False
+    col_main.enabled = True
+    col_main.active = True
+    col_main.label(text = "Import Molecular Dynamics Trajectories")
+    row_import = col_main.row()
+    row_import.prop(
+        bpy.context.scene, 'mol_import_mdsolv_name', 
+        text = "Name", 
+        emboss = True
+    )
+    row_import.operator('mol.import_solv_shell_md', text = "Load", icon='FILE_TICK')
+    row_topology = col_main.row(align = True)
+    row_topology.prop(
+        bpy.context.scene, 'mol_import_mdsolv_topology', 
+        text = 'Topology',
+        emboss = True
+    )
+    row_trajectory = col_main.row()
+    row_trajectory.prop(
+        bpy.context.scene, 'mol_import_mdsolv_trajectory', 
+        text = 'Trajectory', 
+        icon_value = 0, 
+        emboss = True
+    )
+    row_frame = col_main.row(heading = "Frames", align = True)
+    row_frame.prop(
+        bpy.context.scene, 'mol_import_mdsolv_frame_start', 
+        text = 'Start',
+        emboss = True
+    )
+    row_frame.prop(
+        bpy.context.scene, 'mol_import_mdsolv_frame_step', 
+        text = 'Step',
+        emboss = True
+    )
+    row_frame.prop(
+        bpy.context.scene, 'mol_import_mdsolv_frame_end', 
+        text = 'End',
+        emboss = True
+    )
+
+
+
+    col_main.prop(
+        bpy.context.scene, 'mol_mdsolv_solute', 
+        text = 'Import Solute', 
+        emboss = True
+    )
+    col_main.prop(
+        bpy.context.scene, 'mol_mdsolv_solvent_groups_name', 
+        text = 'Import Solvent Groups Name', 
+        emboss = True
+    )
+    col_main.prop(
+        bpy.context.scene, 'mol_mdsolv_solvent_groups', 
+        text = 'Import Solvent Groups', 
+        emboss = True
+    )
+    col_main.prop(
+        bpy.context.scene, 'mol_mdsolv_solute_index', 
+        text = 'Import Solute Index', 
+        emboss = True
+    )
+    col_main.prop(
+        bpy.context.scene, 'mol_mdsolv_frame_index', 
+        text = 'Import Frame Index', 
+        emboss = True
+    )
+
+
+    col_main.separator()
+    col_main.label(text="Custom Selections")
+    row = col_main.row(align=True)
+    
+    row = row.split(factor = 0.9)
+    row.template_list('MOL_UL_TrajectorySelectionListUI_MDSOLV', 'A list', scene, 
+                        "trajectory_selection_list_MDSOLV", scene, "list_index_MDSOLV", rows=3)
+    col = row.column()
+    col.operator('trajectory_selection_list_MDSOLV.new_item', icon="ADD", text="")
+    col.operator('trajectory_selection_list_MDSOLV.delete_item', icon="REMOVE", text="")
     if scene.list_index >= 0 and scene.trajectory_selection_list:
         item = scene.trajectory_selection_list[scene.list_index]
         
@@ -334,14 +488,20 @@ def MOL_PT_panel_ui(layout_function, scene):
         MOL_change_import_interface(row, 'PDB',           0,  72)
         MOL_change_import_interface(row, 'Local File',    1, 108)
         MOL_change_import_interface(row, 'MD Trajectory', 2, 487)
+        MOL_change_import_interface(row, 'MD Trajectory Solv Shell', 3, 600)
+
         
         layout_function = box.box()
         if bpy.context.scene.mol_import_panel_selection == 0:
             MOL_PT_panel_rcsb(layout_function)
         elif bpy.context.scene.mol_import_panel_selection == 1:
             MOL_PT_panel_local(layout_function)
-        else:
+        elif bpy.context.scene.mol_import_panel_selection == 2:
             MOL_PT_panel_md_traj(layout_function, scene)
+        else:
+            MOL_PT_panel_md_traj_solv_shell(layout_function, scene)
+
+
 
 
 
