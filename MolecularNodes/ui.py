@@ -92,9 +92,11 @@ class MOL_OT_Import_Protein_MD(bpy.types.Operator):
         include_bonds = bpy.context.scene.mol_import_include_bonds
 
         solute=bpy.context.scene.mol_md_solute
-        solvent_list=bpy.context.scene.mol_md_solvent_groups
+        solvent_names=bpy.context.scene.mol_md_solvent_groups_name
+        solvent_groups=bpy.context.scene.mol_md_solvent_groups
+
         solute_index = bpy.context.scene.mol_import_md_solute_index
-        frame = bpy.context.scene.mol_import_md_frame
+        frame_index = bpy.context.scene.mol_import_md_frame
 
 
         mol_object, coll_frames = md.load_trajectory(
@@ -107,7 +109,12 @@ class MOL_OT_Import_Protein_MD(bpy.types.Operator):
             del_solvent = del_solvent, 
             selection   = selection,
 
-            solvent_list=solvent_list,
+            solvent_names=solvent_names,
+            solvent_groups=solvent_groups,
+
+            solute_index=solute_index,
+            frame_index=frame_index,
+
             include_bonds=include_bonds,
             solute = solute
             
@@ -215,6 +222,11 @@ def MOL_PT_panel_md_traj(layout_function, scene):
     col_main.prop(
         bpy.context.scene, 'mol_md_solute', 
         text = 'Import Solute', 
+        emboss = True
+    )
+    col_main.prop(
+        bpy.context.scene, 'mol_md_solvent_groups_name', 
+        text = 'Import Solvent Groups Name', 
         emboss = True
     )
     col_main.prop(
