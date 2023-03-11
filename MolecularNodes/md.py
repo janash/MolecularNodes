@@ -105,15 +105,7 @@ def load_trajectory(file_top,
             pass
         
     
-    
-    # determin the bonds for the structure
-    # if hasattr(univ, 'bonds') and include_bonds:
-    #     bonds = univ.bonds.indices
-    # else:
-    #     bonds = []
 
-
-    ##BUGFIX
     if hasattr(univ, 'bonds') and include_bonds:
 
         # If there is a selection, we need to recalculate the bond indices
