@@ -364,14 +364,14 @@ def MOL_PT_panel_md_traj_solv_shell(layout_function, scene):
     row.template_list('MOL_UL_TrajectorySelectionListUI_MDSOLV', 'A list', scene, 
                         "trajectory_selection_list_MDSOLV", scene, "list_index_MDSOLV", rows=3)
     col = row.column()
-    col.operator('trajectory_selection_list_MDSOLV.new_item', icon="ADD", text="")
-    col.operator('trajectory_selection_list_MDSOLV.delete_item', icon="REMOVE", text="")
-    if scene.list_index >= 0 and scene.trajectory_selection_list:
-        item = scene.trajectory_selection_list[scene.list_index]
-
+    col.operator('trajectory_selection_list_mdsolv.new_item', icon="ADD", text="")
+    col.operator('trajectory_selection_list_mdsolv.delete_item', icon="REMOVE", text="")
+    if scene.list_index_MDSOLV >= 0 and scene.trajectory_selection_list_MDSOLV:
+        item = scene.trajectory_selection_list_MDSOLV[scene.list_index_MDSOLV]
+        
         col = col_main.column(align=False)
         col.separator()
-
+        
         col.prop(item, "name")
         col.prop(item, "selection")
 

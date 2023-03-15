@@ -38,7 +38,7 @@ class MOL_UL_TrajectorySelectionListUI_MDSOLV(bpy.types.UIList):
 class TrajectorySelection_OT_NewItem_MDSOLV(bpy.types.Operator):    
     """Add a new custom selection to the list."""
     
-    bl_idname = "trajectory_selection_list.new_item"
+    bl_idname = "trajectory_selection_list_mdsolv.new_item"
     bl_label = "+"
     
     def execute(self, context):
@@ -46,7 +46,7 @@ class TrajectorySelection_OT_NewItem_MDSOLV(bpy.types.Operator):
         return {'FINISHED'}
 
 class TrajectorySelection_OT_DeleteIem_MDSOLV(bpy.types.Operator):    
-    bl_idname = "trajectory_selection_list.delete_item"
+    bl_idname = "trajectory_selection_list_mdsolv.delete_item"
     bl_label = "-"
     
     @classmethod
@@ -57,7 +57,7 @@ class TrajectorySelection_OT_DeleteIem_MDSOLV(bpy.types.Operator):
         index = context.scene.list_index_MDSOLV
         
         my_list.remove(index)
-        context.scene.list_index = min(max(0, index - 1), len(my_list) - 1)
+        context.scene.list_index_MDSOLV = min(max(0, index - 1), len(my_list) - 1)
         
         return {'FINISHED'}
 

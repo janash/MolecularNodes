@@ -31,7 +31,6 @@ pkg.verify()
 from .ui import *
 from .md import *
 from .pkg import *
-
 from .mdsolv import *
 
 
@@ -260,7 +259,6 @@ def register():
         name = "Index for trajectory selection list.", 
         default = 0
     )
-    bpy.types.NODE_MT_add.append(mol_add_node_menu)
 
 
 
@@ -351,19 +349,16 @@ def unregister():
     del bpy.types.Scene.mol_import_mdsolv_frame_end 
     del bpy.types.Scene.mol_import_mdsolv_default_style 
   
-    
 
     del bpy.types.Scene.trajectory_selection_list_MDSOLV
     del bpy.types.Scene.list_index_MDSOLV
 
-    bpy.types.NODE_MT_add.remove(mol_add_node_menu)
     
     #mdsolv
     bpy.utils.unregister_class(TrajectorySelectionList_MDSOLV)
     bpy.utils.unregister_class(MOL_UL_TrajectorySelectionListUI_MDSOLV)
     bpy.utils.unregister_class(TrajectorySelection_OT_NewItem_MDSOLV)
     bpy.utils.unregister_class(TrajectorySelection_OT_DeleteIem_MDSOLV)
-
 
     del bpy.types.Scene.trajectory_selection_list
     del bpy.types.Scene.list_index
