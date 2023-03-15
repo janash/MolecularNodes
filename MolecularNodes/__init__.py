@@ -32,6 +32,9 @@ from .ui import *
 from .md import *
 from .pkg import *
 
+from .mdsolv import *
+
+
 
 def register():
     bpy.types.Scene.pypi_mirror = bpy.props.StringProperty(
@@ -142,6 +145,124 @@ def register():
         subtype = 'NONE',
         default = 0
     )
+    #mdsolv
+    bpy.types.Scene.mol_mdsolv_solute = bpy.props.StringProperty(
+        name = 'mdsolv_solute', 
+        description = 'Custom selection string when importing MD simulation. See: "https://docs.mdanalysis.org/stable/documentation_pages/selections.html"', 
+        options = {'TEXTEDIT_UPDATE'}, 
+        default = 'element Li', 
+        subtype = 'NONE'
+        )
+    bpy.types.Scene.mol_mdsolv_solvent_groups_name = bpy.props.StringProperty(
+        name = 'mdsolv_solvent_groups_name', 
+        description = 'Custom selection string when importing MD simulation. See: "https://docs.mdanalysis.org/stable/documentation_pages/selections.html"', 
+        options = {'TEXTEDIT_UPDATE'}, 
+        default = 'EA,FEC,PF6', 
+        subtype = 'NONE'
+        )
+    bpy.types.Scene.mol_mdsolv_solvent_groups = bpy.props.StringProperty(
+        name = 'mdsolv_solvent_groups', 
+        description = 'Custom selection string when importing MD simulation. See: "https://docs.mdanalysis.org/stable/documentation_pages/selections.html"', 
+        options = {'TEXTEDIT_UPDATE'}, 
+        default = 'resid 1-235,resid 235-600,byres element P', 
+        subtype = 'NONE'
+        )
+    #mdsolv
+    bpy.types.Scene.mol_mdsolv_import_center = bpy.props.BoolProperty(
+        name = "mol_mdsolv_import_centre", 
+        description = "Move the imported Molecule on the World Origin",
+        default = False
+        )
+    bpy.types.Scene.mol_mdsolv_import_del_solvent = bpy.props.BoolProperty(
+        name = "mol_mdsolv_import_del_solvent", 
+        description = "Delete the solvent from the structure on import",
+        default = False
+        )
+    bpy.types.Scene.mol_mdsolv_import_include_bonds = bpy.props.BoolProperty(
+        name = "mol_mdsolv_import_include_bonds", 
+        description = "Include bonds in the imported structure.",
+        default = True
+        )
+    #mdsolv
+    bpy.types.Scene.mol_import_mdsolv_topology = bpy.props.StringProperty(
+        name = 'path_mdsolv_topology', 
+        description = 'File path for the toplogy file for the trajectory', 
+        options = {'TEXTEDIT_UPDATE'}, 
+        default = '', 
+        subtype = 'FILE_PATH', 
+        maxlen = 0
+        )
+    bpy.types.Scene.mol_import_mdsolv_trajectory = bpy.props.StringProperty(
+        name = 'path_mdsolv_trajectory', 
+        description = 'File path for the trajectory file for the trajectory', 
+        options = {'TEXTEDIT_UPDATE'}, 
+        default = '', 
+        subtype = 'FILE_PATH', 
+        maxlen = 0
+        )
+    #for mdsolv
+    bpy.types.Scene.mol_import_mdsolv_name = bpy.props.StringProperty(
+        name = 'mol_mdsolv_name', 
+        description = 'Name of the molecule on import', 
+        options = {'TEXTEDIT_UPDATE'}, 
+        default = '', 
+        subtype = 'NONE', 
+        maxlen = 0
+        )
+    bpy.types.Scene.mol_import_mdsolv_frame_start = bpy.props.IntProperty(
+        name = "mol_import_mdsolv_frame_start", 
+        description = "Frame start for importing MD trajectory", 
+        subtype = 'NONE',
+        default = 0
+    )
+    bpy.types.Scene.mol_import_mdsolv_frame_step = bpy.props.IntProperty(
+        name = "mol_import_mdsolv_frame_step", 
+        description = "Frame step for importing MD trajectory", 
+        subtype = 'NONE',
+        default = 1
+    )
+    bpy.types.Scene.mol_import_mdsolv_frame_end = bpy.props.IntProperty(
+        name = "mol_import_mdsolv_frame_end", 
+        description = "Frame end for importing MD trajectory", 
+        subtype = 'NONE',
+        default = 50
+    )
+    bpy.types.Scene.mol_import_mdsolv_default_style = bpy.props.IntProperty(
+        name = "mol_import_default_style", 
+        description = "Default style for importing molecules.", 
+        subtype = 'NONE',
+        default = 0
+    )
+    #for mdsolv
+    bpy.types.Scene.mol_mdsolv_solute_index = bpy.props.IntProperty(
+        name = "mol_mdsolv_solute_index", 
+        description = "Solute index for importing MD trajectory Solvation Shell", 
+        subtype = 'NONE',
+        default = 603
+    )
+    bpy.types.Scene.mol_mdsolv_frame_index = bpy.props.IntProperty(
+        name = "mol_mdsolv_frame_index", 
+        description = "Frame index for importing MD trajectory Solvation Shell", 
+        subtype = 'NONE',
+        default = 0
+    )
+
+    #mdsolv
+    bpy.utils.register_class(TrajectorySelectionList_MDSOLV)
+    bpy.utils.register_class(MOL_UL_TrajectorySelectionListUI_MDSOLV)
+    bpy.utils.register_class(TrajectorySelection_OT_NewItem_MDSOLV)
+    bpy.utils.register_class(TrajectorySelection_OT_DeleteIem_MDSOLV)
+
+    bpy.types.Scene.trajectory_selection_list_MDSOLV = bpy.props.CollectionProperty(
+        type = TrajectorySelectionList_MDSOLV
+    )
+    bpy.types.Scene.list_index_MDSOLV = bpy.props.IntProperty(
+        name = "Index for trajectory selection list.", 
+        default = 0
+    )
+    bpy.types.NODE_MT_add.append(mol_add_node_menu)
+
+
 
     bpy.utils.register_class(TrajectorySelectionList)
     bpy.utils.register_class(MOL_UL_TrajectorySelectionListUI)
@@ -179,6 +300,8 @@ def register():
     bpy.utils.register_class(MOL_OT_Import_Method_Selection)
     bpy.utils.register_class(MOL_OT_Import_Protein_Local)
     bpy.utils.register_class(MOL_OT_Import_Protein_MD)
+    #new
+    bpy.utils.register_class(MOL_OT_Import_Solv_Shell_MD)
     bpy.utils.register_class(MOL_OT_Assembly_Bio)
     bpy.utils.register_class(MOL_OT_Default_Style)
     bpy.utils.register_class(MOL_OT_Color_Chain)
@@ -207,7 +330,41 @@ def unregister():
     del bpy.types.Scene.mol_import_md_frame_step
     del bpy.types.Scene.mol_import_md_frame_end
     del bpy.types.Scene.mol_import_default_style
+
+    #mdsolv
+    del bpy.types.Scene.mol_mdsolv_solute
+    del bpy.types.Scene.mol_mdsolv_solvent_groups_name
+    del bpy.types.Scene.mol_mdsolv_solvent_groups
+    del bpy.types.Scene.mol_mdsolv_solute_index
+    del bpy.types.Scene.mol_mdsolv_frame_index 
+
+    del bpy.types.Scene.mol_mdsolv_import_center 
+    del bpy.types.Scene.mol_mdsolv_import_del_solvent
+    del bpy.types.Scene.mol_mdsolv_import_include_bonds 
+
+    del bpy.types.Scene.mol_import_mdsolv_topology
+    del bpy.types.Scene.mol_import_mdsolv_trajectory 
+
+    del bpy.types.Scene.mol_import_mdsolv_name
+    del bpy.types.Scene.mol_import_mdsolv_frame_start
+    del bpy.types.Scene.mol_import_mdsolv_frame_step
+    del bpy.types.Scene.mol_import_mdsolv_frame_end 
+    del bpy.types.Scene.mol_import_mdsolv_default_style 
+  
     
+
+    del bpy.types.Scene.trajectory_selection_list_MDSOLV
+    del bpy.types.Scene.list_index_MDSOLV
+
+    bpy.types.NODE_MT_add.remove(mol_add_node_menu)
+    
+    #mdsolv
+    bpy.utils.unregister_class(TrajectorySelectionList_MDSOLV)
+    bpy.utils.unregister_class(MOL_UL_TrajectorySelectionListUI_MDSOLV)
+    bpy.utils.unregister_class(TrajectorySelection_OT_NewItem_MDSOLV)
+    bpy.utils.unregister_class(TrajectorySelection_OT_DeleteIem_MDSOLV)
+
+
     del bpy.types.Scene.trajectory_selection_list
     del bpy.types.Scene.list_index
     
@@ -217,6 +374,11 @@ def unregister():
     bpy.utils.unregister_class(MOL_UL_TrajectorySelectionListUI)
     bpy.utils.unregister_class(TrajectorySelection_OT_NewItem)
     bpy.utils.unregister_class(TrajectorySelection_OT_DeleteIem)
+
+
+
+
+
 
     bpy.utils.unregister_class(MOL_PT_panel)
     bpy.utils.unregister_class(MOL_MT_Add_Node_Menu)
@@ -238,6 +400,8 @@ def unregister():
     bpy.utils.unregister_class(MOL_OT_Import_Method_Selection)
     bpy.utils.unregister_class(MOL_OT_Import_Protein_Local)
     bpy.utils.unregister_class(MOL_OT_Import_Protein_MD)
+    #new
+    bpy.utils.unregister_class(MOL_OT_Import_Solv_Shell_MD)
     bpy.utils.unregister_class(MOL_OT_Assembly_Bio)
     bpy.utils.unregister_class(MOL_OT_Default_Style)
     bpy.utils.unregister_class(MOL_OT_Color_Chain)

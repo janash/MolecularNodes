@@ -5,7 +5,7 @@ from . import coll
 from .load import create_object, add_attribute
 import warnings
 
-class TrajectorySelectionList(bpy.types.PropertyGroup):
+class TrajectorySelectionList_MDSOLV(bpy.types.PropertyGroup):    
     """Group of properties for custom selections for MDAnalysis import."""
     
     name: bpy.props.StringProperty(
@@ -20,7 +20,7 @@ class TrajectorySelectionList(bpy.types.PropertyGroup):
         default = "name CA"
     )
 
-class MOL_UL_TrajectorySelectionListUI(bpy.types.UIList):
+class MOL_UL_TrajectorySelectionListUI_MDSOLV(bpy.types.UIList):    
     """UI List"""
     
     def draw_item(self, context, layout, data, item, 
@@ -35,27 +35,26 @@ class MOL_UL_TrajectorySelectionListUI(bpy.types.UIList):
             layout.label(text = "", icon = custom_icon)
             
 
-class TrajectorySelection_OT_NewItem(bpy.types.Operator):
+class TrajectorySelection_OT_NewItem_MDSOLV(bpy.types.Operator):    
     """Add a new custom selection to the list."""
     
     bl_idname = "trajectory_selection_list.new_item"
     bl_label = "+"
     
     def execute(self, context):
-        context.scene.trajectory_selection_list.add()
+        context.scene.trajectory_selection_list_MDSOLV.add()
         return {'FINISHED'}
 
-class TrajectorySelection_OT_DeleteIem(bpy.types.Operator):
-    
+class TrajectorySelection_OT_DeleteIem_MDSOLV(bpy.types.Operator):    
     bl_idname = "trajectory_selection_list.delete_item"
     bl_label = "-"
     
     @classmethod
     def poll(cls, context):
-        return context.scene.trajectory_selection_list
+        return context.scene.trajectory_selection_list_MDSOLV
     def execute(self, context):
-        my_list = context.scene.trajectory_selection_list
-        index = context.scene.list_index
+        my_list = context.scene.trajectory_selection_list_MDSOLV
+        index = context.scene.list_index_MDSOLV
         
         my_list.remove(index)
         context.scene.list_index = min(max(0, index - 1), len(my_list) - 1)
@@ -70,29 +69,57 @@ def load_trajectory(file_top,
                     world_scale = 0.01, 
                     include_bonds = False, 
                     del_solvent = False,
-                    selection = "not (name H* or name OW)",
+
+                    solute ='element Li',
+                    solvent_names ='EA,FEC,PF6',
+                    solvent_groups ='resid 1-235,resid 235-600,byres element P',
+                    solute_index=603,
+                    frame_index=0,
                     name = "default"
                     ):
-    
+
     import MDAnalysis as mda
     import MDAnalysis.transformations as trans
-    
+
+
+
     # initially load in the trajectory
     if file_traj == "":
         univ = mda.Universe(file_top)
     else:
         univ = mda.Universe(file_top, file_traj)
-        
+
     # separate the trajectory, separate to the topology or the subsequence selections
     traj = univ.trajectory[md_start:md_end:md_step]
-    
-    # if there is a non-blank selection, apply the selection text to the universe for 
-    # later use. This also affects the trajectory, even though it has been separated earlier
-    if selection != "":
+
+
+
+    if solute != "":
         try:
-            univ = univ.select_atoms(selection)
+            from solvation_analysis.solute import Solute
+
+            solute_real = univ.select_atoms(solute)
+
+            list_solv_groups = solvent_groups.split(",")
+            list_solv_name= solvent_names.split(",")
+
+            solv_resid=[]
+            for i in list_solv_groups:
+                solv_resid.append(univ.select_atoms(i))
+
+            solv_dict=dict(zip(list_solv_name,solv_resid))
+
+            # instantiate solution
+            solute_obj= Solute.from_atoms(solute_real,
+                                solv_dict)
+
+            solute_obj.run()
+            shell = solute_obj.get_shell(solute_index, frame_index)
+            univ=shell
+            print(univ)
+
         except:
-            warnings.warn(f"Unable to apply selection: '{selection}'. Loading entire topology.")
+            warnings.warn(f"Unable to apply selection: '{solute}'. Loading entire topology.")
     
     # Try and extract the elements from the topology. If the universe doesn't contain
     # the element information, then guess based on the atom names in the toplogy
@@ -109,7 +136,7 @@ def load_trajectory(file_top,
     if hasattr(univ, 'bonds') and include_bonds:
 
             # If there is a selection, we need to recalculate the bond indices
-            if selection != "":
+            if solute != "":
                 index_map = { index:i for i, index in enumerate(univ.atoms.indices) }
 
                 new_bonds = []
@@ -235,7 +262,7 @@ def load_trajectory(file_top,
             warnings.warn(f"Unable to add attribute: {att['name']}.")
 
     # add the custom selections if they exist
-    custom_selections = bpy.context.scene.trajectory_selection_list_MDSOLV
+    custom_selections = bpy.context.scene.trajectory_selection_list
     if custom_selections:
         for sel in custom_selections:
             try:
