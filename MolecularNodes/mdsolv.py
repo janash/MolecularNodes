@@ -6,8 +6,6 @@ from .load import create_object, add_attribute
 import warnings
 
 
-
-
 class TrajectorySelectionList_MDSOLV(bpy.types.PropertyGroup):
     """Group of properties for custom selections for MDAnalysis import."""
     
