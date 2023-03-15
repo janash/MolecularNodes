@@ -325,8 +325,6 @@ def MOL_PT_panel_md_traj_solv_shell(layout_function, scene):
         emboss = True
     )
 
-
-
     col_main.prop(
         bpy.context.scene, 'mol_mdsolv_solute', 
         text = 'Import Solute', 

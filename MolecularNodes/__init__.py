@@ -391,6 +391,8 @@ def unregister():
     bpy.utils.unregister_class(TrajectorySelection_OT_NewItem_MDSOLV)
     bpy.utils.unregister_class(TrajectorySelection_OT_DeleteIem_MDSOLV)
 
+    
+
     del bpy.types.Scene.trajectory_selection_list
     del bpy.types.Scene.list_index
     bpy.types.NODE_MT_add.remove(mol_add_node_menu)
