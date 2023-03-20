@@ -62,6 +62,90 @@ class TrajectorySelection_OT_DeleteIem(bpy.types.Operator):
         
         return {'FINISHED'}
 
+
+
+
+
+
+
+def selection(      univ, 
+                    solute ="element Li",
+                    solvent_list='resid 1-235,resid 235-600,byres element P',
+                    solvent_name ='EA,FEC,PF6',
+                    solvent_count = "3,1,0",
+                    solute_index_input=603, 
+                    frame_input=0,
+                    name = "default"
+                    ):
+    
+
+    from solvation_analysis.solute import Solute
+
+    solute = univ.select_atoms(solute)
+    list_solvent = solvent_list.split(",")  
+
+    list_solv_name= solvent_name.split(",")
+
+    list_solvent_count = solvent_count.split(",")
+
+    solv_count = []
+    for i in list_solvent_count:
+        solv_count.append(int(i))
+
+    
+    solv_resid=[]
+    for i in list_solvent:
+        solv_resid.append(univ.select_atoms(i))
+
+
+    solv_dict=dict(zip(list_solv_name,solv_resid))
+    solv_count_dict=dict(zip(list_solv_name,solv_count))    
+
+
+    solute_obj= Solute.from_atoms(solute,solv_dict)
+    solute_obj.run()
+
+
+    solute_obj_frame=solute_obj.speciation.get_shells(solv_count_dict)
+    
+    solute_obj_frame_=solute_obj_frame.index.get_level_values(0).to_list()
+    solute_obj_idx=solute_obj_frame.index.get_level_values(1).to_list()
+    list_zip=list(zip(solute_obj_frame_,solute_obj_idx))
+
+
+    zip_list_frame=[]
+    for i in list_zip:
+        if i[0]==frame_input:
+            zip_list_frame.append(i[1])
+
+
+    list_shell = []
+    for i in zip_list_frame:
+        shell = solute_obj.get_shell(solute_index=i, frame=frame_input)
+        list_shell.append(shell)
+
+
+    same_frame_shell=[]
+    for i in solute_obj_frame_:
+        if i == 0:
+            same_frame_shell.append(i)
+
+
+    list_shell_name = []
+    for i in range(len(same_frame_shell)):
+        shell_num = "For Frame " + frame_input + " Shell Number " + str(i)
+        list_shell_name.append(shell_num)
+
+    list_dict=dict(zip(list_shell_name,list_shell))
+
+
+
+
+
+
+
+
+
 def load_trajectory(file_top, 
                     file_traj,
                     md_start = 1, 
@@ -82,7 +166,8 @@ def load_trajectory(file_top,
         univ = mda.Universe(file_top)
     else:
         univ = mda.Universe(file_top, file_traj)
-        
+
+
     # separate the trajectory, separate to the topology or the subsequence selections
     traj = univ.trajectory[md_start:md_end:md_step]
     
@@ -229,6 +314,109 @@ def load_trajectory(file_top,
                     )
             except:
                 warnings.warn("Unable to add custom selection: {}".format(sel.name))
+
+
+    #custom sele w/ pre-load time
+
+    def selection(      univ, 
+                        solute ="element Li",
+                        solvent_list='resid 1-235,resid 235-600,byres element P',
+                        solvent_name ='EA,FEC,PF6',
+                        solvent_count = "3,1,0",
+                        solute_index_input=603, 
+                        frame_input=0,
+                        name = "default"
+                        ):
+        
+
+        from solvation_analysis.solute import Solute
+
+        solute = univ.select_atoms(solute)
+        list_solvent = solvent_list.split(",")  
+
+        list_solv_name= solvent_name.split(",")
+
+        list_solvent_count = solvent_count.split(",")
+
+        solv_count = []
+        for i in list_solvent_count:
+            solv_count.append(int(i))
+
+        
+        solv_resid=[]
+        for i in list_solvent:
+            solv_resid.append(univ.select_atoms(i))
+
+
+        solv_dict=dict(zip(list_solv_name,solv_resid))
+        solv_count_dict=dict(zip(list_solv_name,solv_count))    
+
+
+        solute_obj= Solute.from_atoms(solute,solv_dict)
+        solute_obj.run()
+
+
+        solute_obj_frame=solute_obj.speciation.get_shells(solv_count_dict)
+        
+        solute_obj_frame_=solute_obj_frame.index.get_level_values(0).to_list()
+        solute_obj_idx=solute_obj_frame.index.get_level_values(1).to_list()
+        list_zip=list(zip(solute_obj_frame_,solute_obj_idx))
+
+
+        zip_list_frame=[]
+        for i in list_zip:
+            if i[0]==frame_input:
+                zip_list_frame.append(i[1])
+
+
+        list_shell = []
+        for i in zip_list_frame:
+            shell = solute_obj.get_shell(solute_index=i, frame=frame_input)
+            list_shell.append(shell)
+
+
+        same_frame_shell=[]
+        for i in solute_obj_frame_:
+            if i == 0:
+                same_frame_shell.append(i)
+
+
+        list_shell_name = []
+        for i in range(len(same_frame_shell)):
+            shell_num = "For Frame " + str(frame_input) + " Shell Number " + str(i)
+            list_shell_name.append(shell_num)
+
+        list_dict=dict(zip(list_shell_name,list_shell))
+
+
+        return list_dict
+
+
+
+
+
+
+
+
+    list_dict=selection(univ)
+    def bool_selection_2(selection):
+        return np.isin(univ.atoms.ix, selection.ix).astype(bool)
+
+    for key,value in list_dict.items():
+        try:
+            add_attribute(
+                object=mol_object, 
+                name=key, 
+                data=bool_selection_2(value), 
+                type = "BOOLEAN", 
+                domain = "POINT"
+                )
+        except:
+            warnings.warn("Unable to add custom selection: {}".format(key))    
+
+
+
+
 
     coll_frames = coll.frames(name)
     
