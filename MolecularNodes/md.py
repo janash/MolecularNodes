@@ -19,7 +19,6 @@ class TrajectorySelectionList(bpy.types.PropertyGroup):
         description="String that provides a selection through MDAnalysis", 
         default = "name CA"
     )
-
     
     shell_count: bpy.props.IntProperty(
         name="Shell Count", 
@@ -124,7 +123,6 @@ def load_trajectory(file_top,
     
     
     if hasattr(univ, 'bonds') and include_bonds:
-
             # If there is a selection, we need to recalculate the bond indices
             if selection != "":
                 index_map = { index:i for i, index in enumerate(univ.atoms.indices) }
@@ -251,8 +249,77 @@ def load_trajectory(file_top,
         except:
             warnings.warn(f"Unable to add attribute: {att['name']}.")
 
+
+
+
     # add the custom selections if they exist
     if custom_selections:
+        frame_input=0
+        def selection_shell():
+            name=[]
+            select=[]
+            shell_cnt=[]
+            for sel in custom_selections:
+                name.append(sel.name)
+                select.append(sel.selection)
+                shell_cnt.append(sel.shell_count)
+
+            from solvation_analysis.solute import Solute
+
+            # define solute AtomGroup
+            solute = univ.atoms.select_atoms(select[0])
+
+            del name[0]
+            del select[0]
+            del shell_cnt[0]
+
+            speciation_shell_dict=dict(zip(name,shell_cnt))
+
+            list_solv=[]
+            for i in select:
+                solv=univ.select_atoms(i)         
+                list_solv.append(solv)
+
+            solv_dict=dict(zip(name,list_solv))
+
+
+            # instantiate solution
+            solute_obj = Solute.from_atoms(solute,solv_dict)
+            solute_obj.run()
+
+
+            solute_obj_frame = solute_obj.speciation.get_shells(speciation_shell_dict)
+            solute_obj_frame_=solute_obj_frame.index.get_level_values(0).to_list()
+            solute_obj_idx=solute_obj_frame.index.get_level_values(1).to_list()
+            list_zip=list(zip(solute_obj_frame_,solute_obj_idx))
+
+            shell_n=[]
+            shell_li=[]
+            for i in list_zip:
+                if i[0]==frame_input:
+                    shell_num = "For Frame " + str(frame_input) + " Solute Idx " + str(i[1])
+                    shell_n.append(shell_num)
+                    shell = solute_obj.get_shell(solute_index=i[1], frame=frame_input)
+                    shell_li.append(shell.indices)
+
+
+            list_dict=dict(zip(shell_n,shell_li))
+            return list_dict
+
+        #new fn to add and update custom sel
+        shell_idx=selection_shell()
+        for k,v in shell_idx.items():
+            bool_idx = "index " + str(v[0]) + ":" + str(v[-1])
+
+            add_attribute(
+                    object=mol_object, 
+                    name=k, 
+                    data=bool_selection(bool_idx), 
+                    type = "BOOLEAN", 
+                    domain = "POINT"
+                    )
+
+
         for sel in custom_selections:
             try:
                 add_attribute(
@@ -262,6 +329,7 @@ def load_trajectory(file_top,
                     type = "BOOLEAN", 
                     domain = "POINT"
                     )
+            
             except:
                 warnings.warn("Unable to add custom selection: {}".format(sel.name))
 
