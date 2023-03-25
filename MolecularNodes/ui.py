@@ -1,3 +1,4 @@
+
 import bpy
 from . import nodes
 from . import pkg
@@ -221,7 +222,6 @@ def MOL_PT_panel_md_traj(layout_function, scene):
         col.prop(item, "name")
         col.prop(item, "selection")
         col.prop(item, "shell_count")
-
     
 
 class MOL_OT_Import_Method_Selection(bpy.types.Operator):

@@ -68,14 +68,6 @@ class TrajectorySelection_OT_DeleteIem(bpy.types.Operator):
         context.scene.list_index = min(max(0, index - 1), len(my_list) - 1)
         
         return {'FINISHED'}
-    
-
-
-
-
-
-
-
 
 def load_trajectory(file_top, 
                     file_traj,
@@ -359,3 +351,21 @@ def load_trajectory(file_top,
     
     return mol_object, coll_frames
     
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
