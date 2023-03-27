@@ -92,6 +92,8 @@ class MOL_OT_Import_Protein_MD(bpy.types.Operator):
         del_solvent = bpy.context.scene.mol_import_del_solvent
         include_bonds = bpy.context.scene.mol_import_include_bonds
         custom_selections = bpy.context.scene.trajectory_selection_list
+
+        frame_input = bpy.context.scene.mol_frame_input
         
         mol_object, coll_frames = md.load_trajectory(
             file_top    = file_top, 
@@ -104,6 +106,7 @@ class MOL_OT_Import_Protein_MD(bpy.types.Operator):
             selection   = selection,
             include_bonds=include_bonds,
             custom_selections = custom_selections,
+            frame_input=frame_input
         )
         n_frames = len(coll_frames.objects)
         
@@ -201,6 +204,12 @@ def MOL_PT_panel_md_traj(layout_function, scene):
     col_main.prop(
         bpy.context.scene, 'mol_md_selection', 
         text = 'Import Filter', 
+        emboss = True
+    )
+
+    col_main.prop(
+        bpy.context.scene, 'mol_frame_input', 
+        text = 'Import Frame Input', 
         emboss = True
     )
     col_main.separator()
