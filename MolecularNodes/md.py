@@ -198,12 +198,8 @@ def load_trajectory(file_top,
         return chain_id_num
     
     # returns a numpy array of booleans for each atom, whether or not they are in that selection
-    def bool_selection(atom_group):
-        if isinstance(atom_group, str):
-            atom_group=univ.select_atoms(atom_group)
-            return np.isin(univ.atoms.ix, atom_group.ix).astype(bool)
-        else:
-            return np.isin(univ.atoms.ix, atom_group.ix).astype(bool)
+    def bool_selection(selelction):
+        return np.isin(univ.atoms.ix, univ.select_atoms(selection).ix).astype(bool)
     
     def att_is_backbone():
         return bool_selection("backbone or nucleicbackbone")
@@ -292,7 +288,7 @@ def load_trajectory(file_top,
                 shell_num = "For Frame " + str(frame_input) + " Solute Idx " + str(i[1])
                 shell_n.append(shell_num)
                 shell = solute_obj.get_shell(solute_index=i[1], frame=frame_input)
-                shell_li.append(shell)
+                shell_li.append(shell.indices)
 
 
         list_dict=dict(zip(shell_n,shell_li))
@@ -306,10 +302,12 @@ def load_trajectory(file_top,
             shell_sel=selection_shell(custom_selections,frame_input)
             for k,v in shell_sel.items():
                 try:
+                    bool_idx = 'index ' + ' '.join(str(s) for s in v)
+ 
                     add_attribute(
                     object=mol_object, 
                     name=k, 
-                    data=bool_selection(v), 
+                    data=bool_selection(bool_idx), 
                     type = "BOOLEAN", 
                     domain = "POINT"
                         )
