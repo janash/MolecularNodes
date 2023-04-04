@@ -160,6 +160,12 @@ def register():
         subtype = 'NONE',
         default = 0
     )
+    bpy.types.Scene.mol_import_frame = bpy.props.IntProperty(
+        name = "mol_import_frame", 
+        description = "Default Frame Input", 
+        subtype = 'NONE',
+        default = -1
+    )
 
     bpy.utils.register_class(TrajectorySelectionList)
     bpy.utils.register_class(MOL_UL_TrajectorySelectionListUI)
@@ -231,6 +237,8 @@ def unregister():
     del bpy.types.Scene.mol_import_md_frame_step
     del bpy.types.Scene.mol_import_md_frame_end
     del bpy.types.Scene.mol_import_default_style
+    
+    del bpy.types.Scene.mol_import_frame 
     
     del bpy.types.Scene.trajectory_selection_list
     del bpy.types.Scene.list_index
