@@ -12,13 +12,13 @@ class TrajectorySelectionList(bpy.types.PropertyGroup):
     name: bpy.props.StringProperty(
         name="Attribute Name", 
         description="Attribute", 
-        default=""
+        default="custom_selection"
     )
     
     selection: bpy.props.StringProperty(
         name="Selection String", 
         description="String that provides a selection through MDAnalysis", 
-        default = ""
+        default = "name CA"
     )
 
     shell_count: bpy.props.IntProperty(
@@ -303,10 +303,18 @@ def load_trajectory(file_top,
             custom_selections.add().name=k
             custom_selections.add().selection=bool_idx
 
+            custom_selections.add().name.custom_selections.add().selection
 
         except:
             warnings.warn("Unable to add custom selection: {}".format(k))
 
+
+    
+    for sel in custom_selections:
+        print(sel.name)
+        print(sel.selection)
+
+    breakpoint()
 
 
     # add the custom selections if they exist
