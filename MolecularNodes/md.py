@@ -12,13 +12,13 @@ class TrajectorySelectionList(bpy.types.PropertyGroup):
     name: bpy.props.StringProperty(
         name="Attribute Name", 
         description="Attribute", 
-        default="custom_selection"
+        default=""
     )
     
     selection: bpy.props.StringProperty(
         name="Selection String", 
         description="String that provides a selection through MDAnalysis", 
-        default = "name CA"
+        default = ""
     )
 
     shell_count: bpy.props.IntProperty(
@@ -68,6 +68,7 @@ class TrajectorySelection_OT_DeleteIem(bpy.types.Operator):
         context.scene.list_index = min(max(0, index - 1), len(my_list) - 1)
         
         return {'FINISHED'}
+        
 
 def load_trajectory(file_top, 
                     file_traj,
@@ -243,8 +244,9 @@ def load_trajectory(file_top,
         except:
             warnings.warn(f"Unable to add attribute: {att['name']}.")
 
-
-    def selection_shell(custom_selections,frame_input):
+    
+    
+    def selection_shell():
         name=[]
         select=[]
         shell_cnt=[]
@@ -287,33 +289,28 @@ def load_trajectory(file_top,
                 shell_num = "For Frame " + str(frame_input) + " Solute Idx " + str(i[1])
                 shell_n.append(shell_num)
                 shell = solute_obj.get_shell(solute_index=i[1], frame=frame_input)
-                shell_li.append(shell)
+                shell_li.append(shell.indices)
 
 
         list_dict=dict(zip(shell_n,shell_li))
         return list_dict
     
 
+    shell_sel=selection_shell()
+    for k,v in shell_sel.items():
+        try:
+            bool_idx = 'index ' + ' '.join(str(s) for s in v)
+            custom_selections.add().name=k
+            custom_selections.add().selection=bool_idx
+
+
+        except:
+            warnings.warn("Unable to add custom selection: {}".format(k))
+
+
 
     # add the custom selections if they exist
     if custom_selections:
-        if frame_input!=-1:
-            shell_sel=selection_shell(custom_selections,frame_input)
-            for k,v in shell_sel.items():
-                try:
-                    bool_idx = 'index ' + ' '.join(str(s) for s in v)
-                
-                    add_attribute(
-                    object=mol_object, 
-                    name=k, 
-                    data=bool_selection(bool_idx), 
-                    type = "BOOLEAN", 
-                    domain = "POINT"
-                        )
-                except:
-                    warnings.warn("Unable to add custom selection: {}".format(k))
-
-
         for sel in custom_selections:
             try:
                 add_attribute(
