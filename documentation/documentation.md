@@ -97,12 +97,55 @@ See the [table of supported trajectory formats](https://docs.mdanalysis.org/stab
 
 -   End Frame: The last possible frame from the coordinate file to be imported into Blender.
 
+
 #### Nanometre Scale
 
 Inside of structure files, the base unit is usually 1 Å, which will become 1 m inside of Blender and 1 nm will become 10 m.
 To scale things down to a more manageable size we re-scale the structure so that 1 nm will become 1 m.
 
 ![](images/CleanShot%202022-05-19%20at%2013.21.32@2x.png)
+
+
+## MD Solvation Shell Tab
+
+#### Name Field
+
+An optional name to be given to the structure on import.
+
+#### Topology File Path
+
+The file path to the toplogy file for import.
+See the [table of supported topology formats](https://docs.mdanalysis.org/stable/documentation_pages/topology/init.html#supported-topology-formats) for the formats that should be importable by Molecular Nodes.
+
+#### Trajectory File Path
+
+The file path to the trajectory file for import.
+See the [table of supported trajectory formats](https://docs.mdanalysis.org/stable/documentation_pages/coordinates/init.html#id2) for the formats that should be importable by Molecular Nodes.
+
+
+#### Frame Import 
+
+-   Frame: This input field allows the user to specify the frame number in the trajectory file that they want to analyze. 
+
+#### Solute Selections Options
+
+-   Solute Name:  allows the user to specify the identity of the solute molecule
+
+-   Solute String Selection: allows the user to choose which atoms or residues of the solute molecule they want to include in the analysis 
+
+
+#### Solvent Selections Options
+
+-   Solvent Name: allows the user to specify the name of the solvent molecule 
+
+-   Solvent String Selection: allows the user to specify which atoms or residues of the solvent molecule they want to include in the analysis
+
+-   Solvent Shell Count:  allows the user to specify the chemical composition of particular solvent shells in complex solvent mixtures
+
+
+
+![Screenshot from 2023-04-11 11-38-53](https://user-images.githubusercontent.com/88675769/231292069-d088038f-01ba-4735-ab7c-dffbf3a6e973.png)
+
 
 # Nodes
 
