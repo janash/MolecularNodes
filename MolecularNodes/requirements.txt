@@ -1,3 +1,5 @@
 biotite==0.36.1   # General parsing of structural files.
 MDAnalysis==2.2.0 # Reading of molecular dynamics trajectories.
 mrcfile==1.4.3    # Importing EM density files.
+solvation-analysis== 0.3.2 #MDAnalysis Extension Package to combine solute AtomGroup and solvent AtomGroup Data Structures to construct a solution object for visualizing one of shells belonging to the specified frame
+
