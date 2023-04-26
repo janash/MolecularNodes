@@ -3,3 +3,4 @@ MDAnalysis==2.2.0   # Reading of molecular dynamics trajectories.
 mrcfile==1.4.3      # Importing EM density files.
 starfile==0.4.11    # Importing star files.
 eulerangles==1.0.1  # Handling euler angle in starfiles. 
+solvation-analysis==0.1.5 #MDAnalysis Extension Package to combine solute AtomGroup and solvent AtomGroup Data Structures to construct a solution object.

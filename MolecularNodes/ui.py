@@ -5,7 +5,10 @@ from . import load
 from . import md
 from . import assembly
 from . import density
+from . import solv_ana
 import os
+
+from . import pkg
 
 # operator that calls the function to import the structure from the PDB
 class MOL_OT_Import_Protein_RCSB(bpy.types.Operator):
@@ -118,6 +121,58 @@ class MOL_OT_Import_Protein_MD(bpy.types.Operator):
                 )
         
         return {"FINISHED"}
+
+
+
+class MOL_OT_Import_Solv_Shell(bpy.types.Operator):
+    bl_idname = "mol.import_solv_shell"
+    bl_label = "Import Solvation Shell"
+    bl_description = "Load molecular dynamics trajectory"
+    bl_options = {"REGISTER", "UNDO"}
+
+    @classmethod
+    def poll(cls, context):
+        return True
+
+    def execute(self, context):
+        file_top = bpy.context.scene.solv_ana_import_topology
+        file_traj = bpy.context.scene.solv_ana_import_md_trajectory
+        frame = bpy.context.scene.solv_ana_import_frame
+        del_solvent = bpy.context.scene.solv_ana_import_del_solvent
+        include_bonds = bpy.context.scene.solv_ana_include_bonds
+        solute = bpy.context.scene.solute_input
+        solvent=bpy.context.scene.solvent_groups_list
+        name = bpy.context.scene.solv_ana_import_name
+
+
+
+        mol_object, coll_frames = solv_ana.build_selections(
+                file_top=file_top,
+                file_traj=file_traj,
+                frame=frame,
+                include_bonds = include_bonds, 
+                del_solvent = del_solvent,
+                solute=solute,
+                solvent=solvent, 
+                name=name,
+
+        )
+        n_frames = len(coll_frames.objects)
+        
+        nodes.create_starting_node_tree(
+            obj = mol_object, 
+            coll_frames = coll_frames, 
+            starting_style = bpy.context.scene.solv_ana_import_default_style
+            )
+        bpy.context.view_layer.objects.active = mol_object
+        self.report(
+            {'INFO'}, 
+            message=f"Imported '{file_top}' as {mol_object.name} with {str(n_frames)} \
+                frames from '{file_traj}'."
+                )
+        
+        return {"FINISHED"}
+
 
 def MOL_PT_panel_rcsb(layout_function, ):
     col_main = layout_function.column(heading = '', align = False)
@@ -304,6 +359,75 @@ class MOL_OT_Import_Star_File(bpy.types.Operator):
         return {"FINISHED"}
 
 
+def MOL_PT_panel_solv_ana(layout_function, scene):
+    col_main = layout_function.column(heading = '', align = False)
+    col_main.alert = False
+    col_main.enabled = True
+    col_main.active = True
+    col_main.label(text = "Import Molecular Dynamics Shells")
+    row_import = col_main.row()
+    row_import.prop(
+        bpy.context.scene, 'solv_ana_import_name', 
+        text = "Name", 
+        emboss = True
+    )
+    row_import.operator('mol.import_solv_shell', text = "Load", icon='FILE_TICK')
+    row_topology = col_main.row(align = True)
+    row_topology.prop(
+        bpy.context.scene, 'solv_ana_import_topology', 
+        text = 'Topology',
+        emboss = True
+    )
+    row_trajectory = col_main.row()
+    row_trajectory.prop(
+        bpy.context.scene, 'solv_ana_import_md_trajectory', 
+        text = 'Trajectory', 
+        icon_value = 0, 
+        emboss = True
+    )
+    col_main.prop(
+        bpy.context.scene, 'solv_ana_import_frame', 
+        text = 'Import Frame Number', 
+        emboss = True
+    )
+
+    col_main.separator()
+    col_main.label(text="Solute Selection")
+    row = col_main.row(align=True)
+    
+    row = row.split(factor = 0.9)
+    row.template_list('MOL_UL_SoluteSelectionListUI', 'A list', scene, 
+                        "solute_input", scene, "solute_index", rows=3)
+    col = row.column()
+    col.operator('solute_input.new_item', icon="ADD", text="")
+    col.operator('solute_input.delete_item', icon="REMOVE", text="")
+    if scene.solute_index >= 0 and scene.solute_input:
+        item = scene.solute_input[scene.solute_index]
+        col = col_main.column(align=False)
+        col.separator()
+        col.prop(item, "name")
+        col.prop(item, "selection")
+
+
+    col_main.separator()
+    col_main.label(text="Solvent Group Selections")
+    row = col_main.row(align=True)
+    
+    row = row.split(factor = 0.9)
+    row.template_list('MOL_UL_SolventGroupSelectionListUI', 'A list', scene, 
+                        "solvent_groups_list", scene, "solvent_groups_list_index", rows=3)
+    col = row.column()
+    col.operator('solvent_groups_list.new_item', icon="ADD", text="")
+    col.operator('solvent_groups_list.delete_item', icon="REMOVE", text="")
+    if scene.solvent_groups_list_index >= 0 and scene.solvent_groups_list:
+        item = scene.solvent_groups_list[scene.solvent_groups_list_index]
+        col = col_main.column(align=False)
+        col.separator()
+        col.prop(item, "name")
+        col.prop(item, "selection")
+        col.prop(item, "shell_number")
+
+
 class MOL_OT_Import_Method_Selection(bpy.types.Operator):
     bl_idname = "mol.import_method_selection"
     bl_label = "import_method"
@@ -413,7 +537,8 @@ def MOL_PT_panel_ui(layout_function, scene):
     MOL_change_import_interface(row, 'MD Trajectory', 2, 487)
     MOL_change_import_interface(row, 'EM Map', 3, 'LIGHTPROBE_CUBEMAP')
     MOL_change_import_interface(row, 'Star File',     4, 487)
-    
+    MOL_change_import_interface(row, 'Solvation Shell', 5, 500) 
+
     panel_selection = bpy.context.scene.mol_import_panel_selection
     col = panel.column()
     box = col.box()
@@ -452,6 +577,14 @@ def MOL_PT_panel_ui(layout_function, scene):
                 box.alert = True
                 box.label(text = f"Please install '{name}' in the addon preferences.")
         MOL_PT_panel_star_file(box, scene)
+    elif panel_selection == 5:
+        if not pkg.is_current('solvation-analysis'):
+            pkg.install_all_packages(pypi_mirror_provider='https://pypi.org/simple/')
+            box.enabled = False
+            box.alert = True
+            box.label(text = "Please install solvation-analysis in the addon preferences.")
+        MOL_PT_panel_solv_ana(box, scene)
+
 
 
 class MOL_PT_panel(bpy.types.Panel):

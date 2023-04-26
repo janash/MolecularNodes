@@ -31,6 +31,7 @@ from .ui import *
 from .md import *
 from .pkg import *
 from .pref import *
+from .solv_ana import *
 
 
 def register():
@@ -182,6 +183,81 @@ def register():
         default = 0
     )
     
+
+    bpy.utils.register_class(SoluteSelection)
+    bpy.utils.register_class(MOL_UL_SoluteSelectionListUI)
+    bpy.utils.register_class(SoluteSelection_OT_NewItem)
+    bpy.utils.register_class(SoluteSelection_OT_DeleteIem)
+
+    bpy.types.Scene.solute_input = bpy.props.CollectionProperty(
+        type = SoluteSelection
+    )
+    bpy.types.Scene.solute_index = bpy.props.IntProperty(
+        name = "Solute Index ", 
+        default = 0
+    )
+
+    bpy.utils.register_class(SolventGroupSelection)
+    bpy.utils.register_class(MOL_UL_SolventGroupSelectionListUI)
+    bpy.utils.register_class(SolventGroupSelection_OT_NewItem)
+    bpy.utils.register_class(SolventGroupSelection_OT_DeleteIem)
+
+    bpy.types.Scene.solvent_groups_list = bpy.props.CollectionProperty(
+        type = SolventGroupSelection
+    )
+    bpy.types.Scene.solvent_groups_list_index = bpy.props.IntProperty(
+        name = "Solvent Group Index ", 
+        default = 0
+    )
+
+    bpy.types.Scene.solv_ana_import_name = bpy.props.StringProperty(
+        name = 'solv_ana_import_name', 
+        description = 'Name of the molecule on import', 
+        options = {'TEXTEDIT_UPDATE'}, 
+        default = '', 
+        subtype = 'NONE', 
+        maxlen = 0
+        )
+    bpy.types.Scene.solv_ana_import_topology = bpy.props.StringProperty(
+        name = 'solv_ana_import_topology', 
+        description = 'File path for the toplogy file for the trajectory', 
+        options = {'TEXTEDIT_UPDATE'}, 
+        default = '', 
+        subtype = 'FILE_PATH', 
+        maxlen = 0
+        )
+    bpy.types.Scene.solv_ana_import_md_trajectory = bpy.props.StringProperty(
+        name = 'solv_ana_import_md_trajectory', 
+        description = 'File path for the trajectory file for the trajectory', 
+        options = {'TEXTEDIT_UPDATE'}, 
+        default = '', 
+        subtype = 'FILE_PATH', 
+        maxlen = 0
+        )
+    bpy.types.Scene.solv_ana_import_default_style = bpy.props.IntProperty(
+        name = "solv_ana_import_default_style", 
+        description = "Default style for importing molecules.", 
+        subtype = 'NONE',
+        default = 0
+    )
+    bpy.types.Scene.solv_ana_import_del_solvent = bpy.props.BoolProperty(
+        name = "solv_ana_import_del_solvent", 
+        description = "Delete the solvent from the structure on import",
+        default = True
+        )
+    bpy.types.Scene.solv_ana_include_bonds = bpy.props.BoolProperty(
+        name = "solv_ana_include_bonds", 
+        description = "Include bonds in the imported structure.",
+        default = True
+        )
+    bpy.types.Scene.solv_ana_import_frame = bpy.props.IntProperty(
+        name = "solv_ana_import_frame", 
+        description = "Default Frame", 
+        subtype = 'NONE',
+        default = 0
+    )
+
+
     bpy.types.NODE_MT_add.append(mol_add_node_menu)
 
     bpy.utils.register_class(MOL_PT_panel)
@@ -199,6 +275,7 @@ def register():
     bpy.utils.register_class(MOL_MT_Add_Node_Menu_Assembly)
     bpy.utils.register_class(MOL_MT_Default_Style)
 
+
     bpy.utils.register_class(MOL_OT_Style_Surface_Custom)
 
     bpy.utils.register_class(MOL_OT_Import_Protein_RCSB)
@@ -206,6 +283,9 @@ def register():
     bpy.utils.register_class(MOL_OT_Import_Method_Selection)
     bpy.utils.register_class(MOL_OT_Import_Protein_Local)
     bpy.utils.register_class(MOL_OT_Import_Protein_MD)
+
+    bpy.utils.register_class(MOL_OT_Import_Solv_Shell)
+
     bpy.utils.register_class(MOL_OT_Import_Map)
     bpy.utils.register_class(MOL_OT_Import_Star_File)
     bpy.utils.register_class(MOL_OT_Assembly_Bio)
@@ -244,6 +324,34 @@ def unregister():
     
     del bpy.types.Scene.trajectory_selection_list
     del bpy.types.Scene.list_index
+
+
+    
+    del bpy.types.Scene.solute_input
+    del bpy.types.Scene.solute_index
+
+    del bpy.types.Scene.solvent_groups_list
+    del bpy.types.Scene.solvent_groups_list_index 
+
+    del bpy.types.Scene.solv_ana_import_name 
+    del bpy.types.Scene.solv_ana_import_topology
+    del bpy.types.Scene.solv_ana_import_md_trajectory 
+    del bpy.types.Scene.solv_ana_import_default_style 
+    del bpy.types.Scene.solv_ana_import_del_solvent
+    del bpy.types.Scene.solv_ana_include_bonds
+    del bpy.types.Scene.solv_ana_import_frame
+
+
+    bpy.utils.unregister_class(SoluteSelection)
+    bpy.utils.unregister_class(MOL_UL_SoluteSelectionListUI)
+    bpy.utils.unregister_class(SoluteSelection_OT_NewItem)
+    bpy.utils.unregister_class(SoluteSelection_OT_DeleteIem)
+
+    bpy.utils.unregister_class(SolventGroupSelection)
+    bpy.utils.unregister_class(MOL_UL_SolventGroupSelectionListUI)
+    bpy.utils.unregister_class(SolventGroupSelection_OT_NewItem)
+    bpy.utils.unregister_class(SolventGroupSelection_OT_DeleteIem)
+
     
     bpy.types.NODE_MT_add.remove(mol_add_node_menu)
     
@@ -273,6 +381,8 @@ def unregister():
     bpy.utils.unregister_class(MOL_OT_Import_Method_Selection)
     bpy.utils.unregister_class(MOL_OT_Import_Protein_Local)
     bpy.utils.unregister_class(MOL_OT_Import_Protein_MD)
+    bpy.utils.unregister_class(MOL_OT_Import_Solv_Shell)
+
     bpy.utils.unregister_class(MOL_OT_Import_Map)
     bpy.utils.unregister_class(MOL_OT_Import_Star_File)
     bpy.utils.unregister_class(MOL_OT_Assembly_Bio)
